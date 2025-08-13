@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP RAG Client - Product Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .search-box {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .search-button {
+            padding: 0.75rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .search-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .search-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .filter-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .filter-input {
+            padding: 0.5rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        
+        .options {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #475569;
+        }
+        
+        .results {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .response-stream {
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            min-height: 100px;
+            white-space: pre-wrap;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+        }
+        
+        .response-stream.loading {
+            position: relative;
+        }
+        
+        .response-stream.loading::after {
+            content: '▊';
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .product-list {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .product-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .product-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+        
+        .product-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #1e293b;
+            text-decoration: none;
+        }
+        
+        .product-name:hover {
+            color: #667eea;
+        }
+        
+        .product-price {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #059669;
+        }
+        
+        .product-meta {
+            display: flex;
+            gap: 1rem;
+            margin: 0.5rem 0;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .product-description {
+            color: #475569;
+            margin: 0.5rem 0;
+            line-height: 1.5;
+        }
+        
+        .product-similarity {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: #f0f9ff;
+            color: #0369a1;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .chunks {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .chunk {
+            background: #f8fafc;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .chunk-type {
+            font-weight: 600;
+            color: #667eea;
+            margin-right: 0.5rem;
+        }
+        
+        .citations {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #fef3c7;
+            border-radius: 0.5rem;
+        }
+        
+        .citation {
+            font-size: 0.875rem;
+            color: #92400e;
+            margin-bottom: 0.25rem;
+        }
+        
+        .status {
+            padding: 0.5rem 1rem;
+            background: #dbeafe;
+            color: #1e40af;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 MCP RAG Product Search</h1>
+            <p>Semantic search with real-time streaming responses</p>
+        </div>
+        
+        <div class="search-box">
+            <form class="search-form" id="searchForm">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-input" 
+                    placeholder="Suche nach Produkten... (z.B. 'umweltfreundliche Reinigungsmittel')"
+                    value="vegane Produkte ohne Mikroplastik"
+                >
+                <button type="submit" class="search-button" id="searchButton">
+                    Suchen
+                </button>
+            </form>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label">Min Preis (€)</label>
+                    <input type="number" id="minPrice" class="filter-input" placeholder="0">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Max Preis (€)</label>
+                    <input type="number" id="maxPrice" class="filter-input" placeholder="100">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Kategorie</label>
+                    <input type="text" id="category" class="filter-input" placeholder="z.B. Reinigungsmittel">
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Marke</label>
+                    <input type="text" id="brand" class="filter-input" placeholder="z.B. everdrop">
+                </div>
+            </div>
+            
+            <div class="options">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="streamingMode" checked>
+                    Streaming Mode
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="showChunks" checked>
+                    Show Chunks
+                </label>
+                <label class="checkbox-label">
+                    <input type="radio" name="searchType" value="hybrid" checked>
+                    Hybrid Search
+                </label>
+                <label class="checkbox-label">
+                    <input type="radio" name="searchType" value="vector">
+                    Vector Only
+                </label>
+            </div>
+        </div>
+        
+        <div class="results" id="results" style="display: none;">
+            <div id="status" class="status"></div>
+            <div id="responseStream" class="response-stream"></div>
+            <div id="citations" class="citations" style="display: none;"></div>
+            <div id="productList" class="product-list"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:3001';
+        let eventSource = null;
+        
+        const searchForm = document.getElementById('searchForm');
+        const searchButton = document.getElementById('searchButton');
+        const searchInput = document.getElementById('searchInput');
+        const results = document.getElementById('results');
+        const status = document.getElementById('status');
+        const responseStream = document.getElementById('responseStream');
+        const productList = document.getElementById('productList');
+        const citations = document.getElementById('citations');
+        
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const query = searchInput.value.trim();
+            if (!query) return;
+            
+            // Clear previous results
+            results.style.display = 'block';
+            responseStream.textContent = '';
+            productList.innerHTML = '';
+            citations.style.display = 'none';
+            citations.innerHTML = '';
+            
+            // Build filters
+            const filters = {};
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            const category = document.getElementById('category').value;
+            const brand = document.getElementById('brand').value;
+            
+            if (minPrice || maxPrice) {
+                filters.priceRange = [
+                    minPrice ? parseFloat(minPrice) : 0,
+                    maxPrice ? parseFloat(maxPrice) : 1000
+                ];
+            }
+            if (category) filters.categories = [category];
+            if (brand) filters.brands = [brand];
+            
+            const streamingMode = document.getElementById('streamingMode').checked;
+            const showChunks = document.getElementById('showChunks').checked;
+            const searchType = document.querySelector('input[name="searchType"]:checked').value;
+            
+            if (streamingMode) {
+                // Close existing connection
+                if (eventSource) {
+                    eventSource.close();
+                }
+                
+                // Start streaming
+                searchButton.disabled = true;
+                searchButton.textContent = 'Searching...';
+                responseStream.classList.add('loading');
+                
+                const params = new URLSearchParams({
+                    query,
+                    filters: JSON.stringify(filters),
+                    searchType,
+                    limit: '10'
+                });
+                
+                eventSource = new EventSource(`${API_URL}/stream?${params}`);
+                
+                eventSource.addEventListener('search_started', (e) => {
+                    const data = JSON.parse(e.data);
+                    status.textContent = `Search started at ${new Date(data.timestamp).toLocaleTimeString()}`;
+                    status.className = 'status';
+                });
+                
+                eventSource.addEventListener('chunks_retrieved', (e) => {
+                    const data = JSON.parse(e.data);
+                    status.textContent = `Found ${data.count} relevant products`;
+                });
+                
+                eventSource.addEventListener('token', (e) => {
+                    const data = JSON.parse(e.data);
+                    responseStream.textContent += data.content;
+                });
+                
+                eventSource.addEventListener('citation', (e) => {
+                    const data = JSON.parse(e.data);
+                    citations.style.display = 'block';
+                    citations.innerHTML += `
+                        <div class="citation">
+                            📌 <a href="${data.url}" target="_blank">${data.source}</a> 
+                            (Relevance: ${(data.relevance * 100).toFixed(1)}%)
+                        </div>
+                    `;
+                });
+                
+                eventSource.addEventListener('complete', async (e) => {
+                    responseStream.classList.remove('loading');
+                    searchButton.disabled = false;
+                    searchButton.textContent = 'Search';
+                    eventSource.close();
+                    
+                    // Fetch the actual products
+                    const response = await fetch(`${API_URL}/search`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            query,
+                            filters,
+                            searchType,
+                            includeChunks: showChunks,
+                            stream: false
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    displayProducts(data.results);
+                });
+                
+                eventSource.addEventListener('error', (e) => {
+                    responseStream.classList.remove('loading');
+                    searchButton.disabled = false;
+                    searchButton.textContent = 'Search';
+                    status.textContent = 'Error occurred during search';
+                    status.className = 'status error';
+                    eventSource.close();
+                });
+                
+            } else {
+                // Non-streaming mode
+                searchButton.disabled = true;
+                searchButton.textContent = 'Searching...';
+                
+                try {
+                    const response = await fetch(`${API_URL}/search`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            query,
+                            filters,
+                            searchType,
+                            includeChunks: showChunks,
+                            stream: false
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        status.textContent = `Found ${data.results.length} products`;
+                        status.className = 'status';
+                        responseStream.textContent = data.response;
+                        displayProducts(data.results);
+                    } else {
+                        throw new Error(data.error || 'Search failed');
+                    }
+                    
+                } catch (error) {
+                    status.textContent = `Error: ${error.message}`;
+                    status.className = 'status error';
+                } finally {
+                    searchButton.disabled = false;
+                    searchButton.textContent = 'Search';
+                }
+            }
+        });
+        
+        function displayProducts(products) {
+            if (!products || products.length === 0) {
+                productList.innerHTML = '<p>No products found</p>';
+                return;
+            }
+            
+            productList.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <div class="product-header">
+                        <a href="${product.url}" target="_blank" class="product-name">
+                            ${product.name}
+                        </a>
+                        <span class="product-price">
+                            ${product.price ? `€${product.price}` : ''}
+                        </span>
+                    </div>
+                    <div class="product-meta">
+                        ${product.brand ? `<span>🏷️ ${product.brand}</span>` : ''}
+                        ${product.category ? `<span>📁 ${product.category}</span>` : ''}
+                        <span class="product-similarity">
+                            ${(product.similarity * 100).toFixed(1)}% Match
+                        </span>
+                    </div>
+                    ${product.description ? `
+                        <p class="product-description">
+                            ${product.description.substring(0, 200)}${product.description.length > 200 ? '...' : ''}
+                        </p>
+                    ` : ''}
+                    ${product.chunks && product.chunks.length > 0 ? `
+                        <div class="chunks">
+                            <strong>Relevant Chunks:</strong>
+                            ${product.chunks.map(chunk => `
+                                <div class="chunk">
+                                    <span class="chunk-type">[${chunk.chunkType}]</span>
+                                    ${chunk.content.substring(0, 150)}...
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

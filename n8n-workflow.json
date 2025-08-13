@@ -1,0 +1,85 @@
+{
+  "name": "M42 Shop RAG Search",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://60fa525c5de5.ngrok-free.app/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"{{ $json.searchQuery || 'umweltfreundliche Reinigungsmittel' }}\",\n  \"limit\": {{ $json.limit || 10 }},\n  \"searchType\": \"hybrid\",\n  \"includeChunks\": true,\n  \"rerank\": true\n}",
+        "options": {}
+      },
+      "id": "http-request",
+      "name": "Search Products",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "searchQuery",
+              "value": "vegane Produkte ohne Mikroplastik"
+            }
+          ],
+          "number": [
+            {
+              "name": "limit",
+              "value": 5
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-search-params",
+      "name": "Set Search Parameters",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [350, 300]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Search Parameters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Search Parameters": {
+      "main": [
+        [
+          {
+            "node": "Search Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "m42-shop-rag": {
+      "command": "node",
+      "args": ["./dist/mcp/server.js"],
+      "cwd": "/home/konstantin/projects/m42-shop-etl",
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}",
+        "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+        "MCP_PORT": "3001"
+      }
+    }
+  }
+}

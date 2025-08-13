@@ -49,6 +49,9 @@ build/
 *.egg-info/
 .eggs/
 
+# Drizzle
+drizzle/
+
 # Database
 *.db
 *.sqlite
