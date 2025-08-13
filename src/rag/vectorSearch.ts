@@ -147,7 +147,7 @@ export async function vectorSearch(options: SearchOptions): Promise<SearchResult
     existing.maxSimilarity = Math.max(existing.maxSimilarity, chunk.similarity);
     existing.chunks.push({
       chunkId: chunk.chunkId,
-      chunkType: chunk.chunkType,
+      chunkType: chunk.chunkType as string,
       content: chunk.chunkContent || '',
       similarity: chunk.similarity,
       position: chunk.position || 0

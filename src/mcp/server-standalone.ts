@@ -98,7 +98,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // List available tools
-app.get('/tools', (req: Request, res: Response) => {
+app.get('/tools', (_req: Request, res: Response) => {
   res.json({ tools: mcpTools });
 });
 
@@ -314,7 +314,7 @@ function sendSSE(res: Response, event: string, data: any) {
 
 // Start server - bind to all interfaces (0.0.0.0) for Windows access
 const host = '0.0.0.0';
-app.listen(port, host, () => {
+app.listen(Number(port), host, () => {
   console.log(`🚀 MCP RAG Server (WSL) running at http://${host}:${port}`);
   console.log(`📍 Accessible from Windows at:`);
   console.log(`   http://localhost:${port} (if WSL2 port forwarding is enabled)`);

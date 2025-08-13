@@ -1,4 +1,4 @@
-import { apiConfig, serverConfig } from '../config/index.js';
+import { apiConfig } from '../config/index.js';
 import { z } from 'zod';
 
 const FIRECRAWL_API_BASE = 'https://api.firecrawl.dev/v1';
@@ -41,8 +41,8 @@ export class FirecrawlService {
   async startCrawl(config: CrawlJobConfig): Promise<string> {
     try {
       // Build includes and excludes patterns
-      const includes = config.includePaths.map(path => `${config.baseUrl}${path}/**`);
-      const excludes = config.excludePaths?.map(path => `${config.baseUrl}${path}/**`) || [];
+      // const includes = config.includePaths.map(path => `${config.baseUrl}${path}/**`);
+      // const excludes = config.excludePaths?.map(path => `${config.baseUrl}${path}/**`) || [];
       
       // For v1 API, we need to adjust the URL to include the path
       // Since Firecrawl v1 doesn't support includes/excludes, we'll crawl from the products page
@@ -171,7 +171,7 @@ export class FirecrawlService {
         throw new Error(`Firecrawl API error: ${response.status} - ${errorText}`);
       }
       
-      const data = await response.json();
+      const data = await response.json() as any;
       
       if (!data.success) {
         throw new Error('Failed to scrape URL');

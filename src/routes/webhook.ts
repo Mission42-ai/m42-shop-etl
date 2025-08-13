@@ -32,7 +32,7 @@ const crawlPageSchema = z.object({
 });
 
 // POST /webhook/firecrawl
-router.post('/firecrawl', async (req: Request, res: Response) => {
+router.post('/firecrawl', async (req: Request, res: Response): Promise<void> => {
   try {
     // Parse and validate webhook event
     const event = webhookEventSchema.parse(req.body);
@@ -48,7 +48,8 @@ router.post('/firecrawl', async (req: Request, res: Response) => {
     
     if (!crawlJob) {
       console.warn(`⚠️ No crawl job found for Firecrawl ID: ${event.id}`);
-      return res.status(200).json({ status: 'ignored', reason: 'unknown_job' });
+      res.status(200).json({ status: 'ignored', reason: 'unknown_job' });
+      return;
     }
     
     // Handle different event types
@@ -83,7 +84,7 @@ router.post('/firecrawl', async (req: Request, res: Response) => {
 });
 
 // Handle crawl started event
-async function handleCrawlStarted(crawlJobId: string, event: any) {
+async function handleCrawlStarted(crawlJobId: string, _event: any) {
   console.log(`🚀 Crawl started for job ${crawlJobId}`);
   
   await db

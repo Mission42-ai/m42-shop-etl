@@ -1,6 +1,6 @@
 import { db, products, productChunks, Product } from '../db/index.js';
 import { eq } from 'drizzle-orm';
-import { extractWithLLM, ProductExtraction } from './llmExtractor.js';
+import { extractWithLLM } from './llmExtractor.js';
 import { createChunks, splitLargeChunk } from './chunker.js';
 import { generateEmbeddings } from './embedder.js';
 import { createHash } from '../utils/hash.js';
@@ -70,8 +70,16 @@ export async function processProduct(input: ProcessProductInput): Promise<Proces
       warnings: extracted.warnings ?? [],
       specifications: extracted.specifications ?? {},
       attributes: extracted.attributes ?? {},
-      images: extracted.images ?? [],
-      videos: extracted.videos ?? [],
+      images: (extracted.images ?? []).map(img => ({
+        url: img.url,
+        alt: img.alt || undefined,
+        type: img.type || undefined
+      })),
+      videos: (extracted.videos ?? []).map(vid => ({
+        url: vid.url,
+        title: vid.title || undefined,
+        type: vid.type || undefined
+      })),
       locale: input.metadata?.language || 'de-DE',
       pageMarkdown: input.markdown,
       extractedData: extracted,

@@ -93,14 +93,13 @@ interface ExtractionInput {
 }
 
 export async function extractWithLLM(input: ExtractionInput): Promise<ProductExtraction> {
-  try {
-    // Truncate markdown if too long (to stay within token limits)
-    const maxLength = 50000;
-    const truncatedMarkdown = input.markdown.length > maxLength 
-      ? input.markdown.substring(0, maxLength) + '\n... [truncated]'
-      : input.markdown;
-    
-    const userPrompt = `URL: ${input.url}
+  // Truncate markdown if too long (to stay within token limits)
+  const maxLength = 50000;
+  const truncatedMarkdown = input.markdown.length > maxLength 
+    ? input.markdown.substring(0, maxLength) + '\n... [truncated]'
+    : input.markdown;
+  
+  const userPrompt = `URL: ${input.url}
 LOCALE: ${input.locale || localeConfig.defaultLocale}
 ${input.metadata ? `METADATA: ${JSON.stringify(input.metadata, null, 2)}` : ''}
 
@@ -122,7 +121,10 @@ Extract product data and return a JSON object with these exact field names:
 - delivery_time, shipping_info
 
 For cleaning products like detergents, use product_type: "beauty".`;
-    
+  
+  let content: string | undefined | null;
+  
+  try {
     console.log(`🤖 Extracting product data from ${input.url}...`);
     
     const response = await openai.chat.completions.create({
@@ -142,7 +144,7 @@ For cleaning products like detergents, use product_type: "beauty".`;
       max_tokens: 4000,
     });
     
-    const content = response.choices[0]?.message?.content;
+    content = response.choices[0]?.message?.content;
     if (!content) {
       throw new Error('No response from OpenAI');
     }
@@ -370,7 +372,7 @@ Important fixes needed:
         console.error('❌ Auto-fix attempt failed:', autoFixError);
         
         // Fall back to partial data extraction
-        const rawData = error.data as any;
+        const rawData = (error as any).data as any;
         if (rawData && typeof rawData === 'object') {
           const fallback: any = {
             name: rawData.name || rawData.product_name || rawData.title || 'Unknown Product',
@@ -408,7 +410,7 @@ Important fixes needed:
 export function inferProductType(content: string): ProductExtraction['product_type'] {
   const contentLower = content.toLowerCase();
   
-  const typePatterns: Record<ProductExtraction['product_type'], string[]> = {
+  const typePatterns: Record<NonNullable<ProductExtraction['product_type']>, string[]> = {
     fashion: ['kleidung', 'clothing', 'fashion', 'shirt', 'hose', 'kleid', 'dress', 'jacket'],
     furniture: ['möbel', 'furniture', 'sofa', 'tisch', 'table', 'stuhl', 'chair', 'schrank'],
     electronics: ['elektronik', 'electronics', 'computer', 'laptop', 'phone', 'tv', 'monitor'],

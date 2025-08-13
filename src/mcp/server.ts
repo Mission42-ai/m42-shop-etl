@@ -100,7 +100,7 @@ const mcpTools = [
 ];
 
 // Health check endpoint
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.json({ 
     status: 'healthy', 
     service: 'MCP RAG Server',
@@ -109,7 +109,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // List available tools
-app.get('/tools', (req: Request, res: Response) => {
+app.get('/tools', (_req: Request, res: Response) => {
   res.json({ tools: mcpTools });
 });
 

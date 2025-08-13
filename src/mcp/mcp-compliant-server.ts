@@ -1,6 +1,5 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { z } from 'zod';
 import { vectorSearch, hybridSearch } from '../rag/vectorSearch.js';
 import { apiConfig } from '../config/index.js';
 import OpenAI from 'openai';
@@ -215,7 +214,7 @@ app.get('/stream', async (req: Request, res: Response) => {
 });
 
 // Helper function to send MCP response
-function sendMCPResponse(res: Response, method: string, result: any) {
+function sendMCPResponse(res: Response, _method: string, result: any) {
   const response = {
     jsonrpc: '2.0',
     id: Date.now(),
@@ -387,7 +386,7 @@ app.post('/search', async (req: Request, res: Response) => {
 });
 
 // Health check
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.json({ 
     status: 'healthy',
     service: 'MCP Compliant Server',
@@ -401,7 +400,7 @@ app.get('/health', (req: Request, res: Response) => {
 
 // Start server
 const host = '0.0.0.0';
-app.listen(port, host, () => {
+app.listen(Number(port), host, () => {
   console.log(`🚀 MCP Compliant Server running at http://${host}:${port}`);
   console.log(`📡 MCP Stream endpoint: POST http://${host}:${port}/stream`);
   console.log(`🔍 Regular search: POST http://${host}:${port}/search`);

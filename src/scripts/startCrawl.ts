@@ -1,8 +1,6 @@
 import { db, shops, crawlJobs } from '../db/index.js';
-import { eq } from 'drizzle-orm';
 import { firecrawl } from '../services/firecrawl.js';
 import { serverConfig } from '../config/index.js';
-import { generateId } from '../utils/hash.js';
 
 interface StartCrawlOptions {
   shopName: string;
